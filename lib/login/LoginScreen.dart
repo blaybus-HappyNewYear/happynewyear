@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import '/MainScreen.dart'; // MainScreen을 import
+import '/MainScreen.dart';
+import '/api/auth_login.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Login extends StatefulWidget {
   @override
@@ -10,6 +12,12 @@ class _LoginState extends State<Login> {
   // Controllers
   final TextEditingController _idController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final authLogin = AuthLogin();
+
+  String? idErrorMessage;
+  String? passwordErrorMessage;
+  bool isIdError = false;
+  bool isPasswordError = false;
 
   // Password visibility state
   bool isHiddenPassword = true;
@@ -35,9 +43,16 @@ class _LoginState extends State<Login> {
     });
   }
 
+  //아이디 양식 일치하는지 확인 (영문 + 숫자)
+  bool _isValidId(String id) {
+    final regex = RegExp(r'^[a-zA-Z0-9]+$');
+    return regex.hasMatch(id);
+  }
+
   @override
   void initState() {
     super.initState();
+    _loadUserData();
     // Add listeners to text fields to update button state when text is entered
     _idController.addListener(_updateButtonState);
     _passwordController.addListener(_updateButtonState);
@@ -51,12 +66,96 @@ class _LoginState extends State<Login> {
     super.dispose();
   }
 
+  // 저장된 사용자 정보 불러오기
+  _loadUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      isRememberMe = prefs.getBool('isRememberMe') ?? false;
+      if (isRememberMe) {
+        _idController.text = prefs.getString('username') ?? '';
+        _passwordController.text = prefs.getString('password') ?? '';
+      }
+    });
+  }
+
+  // "로그인 유지" 상태 저장
+  _saveUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setBool('isRememberMe', isRememberMe);
+    prefs.setString('username', _idController.text);
+    prefs.setString('password', _passwordController.text);
+  }
+
   // Navigate to the main screen after login
-  void _navigateToMain() {
-    Navigator.pushReplacement(
+  void _navigateToMainScreen() {
+    Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => MainScreen()), // MainScreen으로 이동
     );
+  }
+
+  void _handleSignIn() async {
+    final username = _idController.text;
+    final password = _passwordController.text;
+
+    bool hasError = false;
+
+    // ID 검증
+    if (!_isValidId(username)) {
+      setState(() {
+        idErrorMessage = '아이디 형식이 올바르지 않습니다';
+        isIdError = true;
+      });
+      hasError = true;
+    } else {
+      setState(() {
+        idErrorMessage = null;
+        isIdError = false;
+      });
+    }
+
+    // 비밀번호 검증
+    if (password.isEmpty) {
+      setState(() {
+        passwordErrorMessage = '비밀번호를 입력하세요';
+        isPasswordError = true;
+      });
+      hasError = true;
+    } else if (passwordErrorMessage == null) {
+      setState(() {
+        passwordErrorMessage = null;
+        isPasswordError = false;
+      });
+    }
+
+    // 두 필드 중 하나라도 오류가 있을 경우, 로그인 진행하지 않음
+    if (hasError) {
+      return;
+    }
+
+    // Proceed with login if ID is valid
+    final accessToken = await authLogin.signIn(username, password);
+
+    if (accessToken != null) {
+      print('Login successful! Token: $accessToken');
+      _navigateToMainScreen();
+    } else {
+      setState(() {
+        passwordErrorMessage = '비밀번호가 일치하지 않습니다';
+        isPasswordError = true;
+      });
+      print('Login failed');
+    }
+
+    //로그인 성공 시 "로그인 유지" 상태에 따라 저장
+    if (isRememberMe) {
+      _saveUserData(); // 로그인 유지 상태를 저장
+    } else {
+      final prefs = await SharedPreferences.getInstance();
+      prefs.remove('isRememberMe');
+      prefs.remove('username');
+      prefs.remove('password');
+    }
   }
 
   @override
@@ -79,7 +178,7 @@ class _LoginState extends State<Login> {
                     alignment: Alignment.center,
                     child: Text.rich(
                       TextSpan(
-                        text: '두손꼭', // 기본 텍스트 스타일
+                        text: '두손꼭',
                         style: TextStyle(
                           fontFamily: 'RixInooAriDuri',
                           fontSize: 46.6,
@@ -87,10 +186,10 @@ class _LoginState extends State<Login> {
                         ),
                         children: <TextSpan>[
                           TextSpan(
-                            text: 'Do', // "Do" 부분
+                            text: 'Do',
                             style: TextStyle(
-                              color: Color(0xFFF95E39), // 원하는 색으로 변경
-                              fontWeight: FontWeight.bold, // 선택적으로 굵게 설정 가능
+                              color: Color(0xFFF95E39),
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                           TextSpan(
@@ -142,28 +241,43 @@ class _LoginState extends State<Login> {
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(5),
                           borderSide: BorderSide(
-                            color: Color(0xFFC7C7C7), // 기본 테두리 색상
+                            color: isIdError ? Color(0xFFFF6969) : Color(0xFFC7C7C7), // 기본 테두리 색상
                             width: 1.0, // 기본 테두리 두께
                           ),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(5),
                           borderSide: BorderSide(
-                            color: Color(0xFFC7C7C7), // 활성화된 상태에서의 테두리 색상
+                            color: isIdError ? Color(0xFFFF6969) : Color(0xFFC7C7C7), // 활성화된 상태에서의 테두리 색상
                             width: 1.0, // 테두리 두께
                           ),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(5),
                           borderSide: BorderSide(
-                            color: Color(0xFF7879F1), // 포커스 상태에서의 테두리 색상 (여기서는 파란색)
+                            color: isIdError ? Color(0xFFFF6969) : Color(0xFF7879F1), // 포커스 상태에서의 테두리 색상
                             width: 2.0, // 포커스 상태에서 테두리 두께
                           ),
                         ),
                       ),
-                      keyboardType: TextInputType.emailAddress,
+                      keyboardType: TextInputType.text,
                     ),
                   ),
+                  // ID 오류 메시지
+                  if (idErrorMessage != null)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 1.0, top: 3.0),
+                      child: Align(
+                        alignment: Alignment.topLeft,
+                        child: Text(
+                        idErrorMessage!,
+                        style: TextStyle(
+                          color: Color(0xFFFF6969),
+                          fontSize: 14.0,
+                        ),
+                        ),
+                      ),
+                    ),
                   SizedBox(height: 16),
                   // Password 입력 필드
                   Container(
@@ -190,27 +304,49 @@ class _LoginState extends State<Login> {
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(5),
                           borderSide: BorderSide(
-                            color: Color(0xFFC7C7C7), // 기본 테두리 색상
+                            color: isPasswordError ? Color(0xFFFF6969) : Color(0xFFC7C7C7), // 기본 테두리 색상
                             width: 1.0, // 기본 테두리 두께
                           ),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(5),
                           borderSide: BorderSide(
-                            color: Color(0xFFC7C7C7), // 활성화된 상태에서의 테두리 색상
+                            color: isPasswordError ? Color(0xFFFF6969) : Color(0xFFC7C7C7), // 활성화된 상태에서의 테두리 색상
                             width: 1.0, // 테두리 두께
                           ),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(5),
                           borderSide: BorderSide(
-                            color: Color(0xFF7879F1), // 포커스 상태에서의 테두리 색상
-                            width: 2.0, // 포커스 상태에서 테두리 두께
+                            color: isPasswordError ? Color(0xFFFF6969) : Color(0xFF7879F1), // 포커스 상태에서의 테두리 색상
+                            width: 1.0, // 포커스 상태에서 테두리 두께
+                          ),
+                        ),
+                        errorBorder: OutlineInputBorder( // 오류 상태의 테두리 색상
+                          borderRadius: BorderRadius.circular(5),
+                          borderSide: BorderSide(
+                            color: Colors.red, // 오류 색상
+                            width: 2.0,
                           ),
                         ),
                       ),
                     ),
                   ),
+                  // password 오류 메시지
+                  if (passwordErrorMessage != null)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 1.0, top: 3.0),
+                      child: Align(
+                        alignment: Alignment.topLeft,
+                        child: Text(
+                          passwordErrorMessage!,
+                          style: TextStyle(
+                            color: Color(0xFFFF6969),
+                            fontSize: 14.0,
+                          ),
+                        ),
+                      ),
+                    ),
                   // 로그인 유지 체크박스
                   Row(
                     mainAxisAlignment: MainAxisAlignment.start,
@@ -244,12 +380,7 @@ class _LoginState extends State<Login> {
                         borderRadius: BorderRadius.circular(10.0),
                       ),
                     ),
-                    onPressed: isButtonActive
-                        ? () {
-                      // 로그인 버튼 클릭 시 Main 화면으로 이동
-                      _navigateToMain();
-                    }
-                        : null,
+                    onPressed: isButtonActive ? _handleSignIn : null,
                     child: Text(
                       "로그인",
                       style: TextStyle(
@@ -268,8 +399,79 @@ class _LoginState extends State<Login> {
                         borderRadius: BorderRadius.circular(10.0),
                       ),
                     ),
-                    onPressed: () {
-                      print("회원가입 버튼 클릭!");
+                    onPressed:() {    // AlertDialog를 띄우기 위해 showDialog 사용
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return Dialog(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10.0),
+                            ),
+                            child: Container(
+                              height: 234.0,
+                              width: 350.0,
+                              padding: EdgeInsets.all(16.0),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: <Widget>[
+                                  SizedBox(
+                                    height: 20,
+                                  ),
+                                  Text("회원가입안내",
+                                      style: TextStyle(
+                                        fontFamily: 'Pretendard',
+                                        fontSize: 22.0,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.black)
+                                  ),
+                                  SizedBox(height: 20),
+                                  RichText(
+                                    textAlign: TextAlign.center,
+                                    text: TextSpan(
+                                      style: TextStyle(
+                                        fontFamily: 'Pretendard',
+                                        fontSize: 14.0,
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.black,
+                                        height: 1.8,
+                                      ),
+                                      children: [
+                                        TextSpan(text: "회원가입 및 정보를 잊어버리신 경우에는\n"),
+                                        TextSpan(text: "담당자에게 문의해주시기 바랍니다."),
+                                      ],
+                                    ),
+                                  ),
+                                  SizedBox(height: 20),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          minimumSize: Size(280.0, 52.0),
+                                          backgroundColor: Color(0xFFF95E39),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(5.0),
+                                          ),
+                                        ),
+                                        onPressed: () { Navigator.of(context).pop();
+                                        },
+                                        child: Text(
+                                          "확인",
+                                          style: TextStyle(
+                                            fontSize: 16.0,
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w700
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      );
                     },
                     child: Text(
                       "회원가입",

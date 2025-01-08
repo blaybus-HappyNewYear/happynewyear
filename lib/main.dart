@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'login/LoginScreen.dart';
+import 'notice/NoticeScreen.dart';
 
 void main() {
   runApp(MyApp());
