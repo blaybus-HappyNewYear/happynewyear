@@ -61,7 +61,18 @@ flutter:
   uses-material-design: true
 
   assets:
-     - assets/images/sunny.png
+     - assets/icons/home_unselect.png
+     - assets/icons/home_select.png
+     - assets/icons/quest_unselect.png
+     - assets/icons/quest_select.png
+     - assets/icons/xp_unselect.png
+     - assets/icons/xp_select.png
+     - assets/icons/noticeboard_unselect.png
+     - assets/icons/noticeboard_select.png
+     - assets/icons/my_unselect.png
+     - assets/icons/my_select.png
+     - assets/icons/alarm_default.png
+     - assets/icons/alarm_active.png
      - assets/fonts/RixInooAriDuri_Regular.ttf
      - assets/fonts/Pretendard-Regular.otf
 #     - images/a_dot_ham.jpeg

@@ -88,10 +88,10 @@ class _LoginState extends State<Login> {
 
   // Navigate to the main screen after login
   void _navigateToMainScreen() {
-    Navigator.push(
+    Navigator.pushReplacementNamed(
       context,
-      MaterialPageRoute(builder: (context) => MainScreen()), // MainScreen으로 이동
-    );
+        '/mainpage'
+    ); // MainScreen으로 이동
   }
 
   void _handleSignIn() async {
@@ -182,7 +182,7 @@ class _LoginState extends State<Login> {
                         style: TextStyle(
                           fontFamily: 'RixInooAriDuri',
                           fontSize: 46.6,
-                          color: Colors.black87,
+                          color: Colors.black,
                         ),
                         children: <TextSpan>[
                           TextSpan(
@@ -197,7 +197,7 @@ class _LoginState extends State<Login> {
                             style: TextStyle(
                               fontFamily: 'RixInooAriDuri',
                               fontSize: 46.6,
-                              color: Colors.black87,
+                              color: Colors.black,
                             ),
                           ),
                         ],

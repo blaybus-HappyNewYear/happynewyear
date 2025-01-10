@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '/Bottom_Navigation.dart';
 
 void main() {
   runApp(MyApp());
@@ -161,6 +162,7 @@ class _BoardPageState extends State<BoardPage> {
           )
         ],
       ),
+      bottomNavigationBar: BottomNavigation(selectedIndex: 3),
     );
   }
 }
