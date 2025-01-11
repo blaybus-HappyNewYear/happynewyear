@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '/Bottom_Navigation.dart';
+import 'notice/NoticeScreen.dart';
 
 class MainScreen extends StatelessWidget {
   @override
@@ -44,7 +45,12 @@ class MainScreen extends StatelessWidget {
               padding: EdgeInsets.only(top: 10.0),
               icon: Image.asset("assets/icons/alarm_default.png"),
               onPressed: () {
-                print("Icon pressed");
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => NoticePage(),
+                  ),
+                );
               },
             ),
           ],

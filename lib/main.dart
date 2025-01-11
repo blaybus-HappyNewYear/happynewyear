@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:happynewyear/quest/QuestScreen.dart';
 import 'login/LoginScreen.dart';
 import 'mypage/MyPage.dart';
-import 'notice/NoticeScreen.dart';
+import 'board/BoardScreen.dart';
 import 'MainScreen.dart';
 import 'xp/XpScreen.dart';
 
@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
           '/mainpage' : (context) => MainScreen(),
           '/questpage' : (context) => QuestScreen(),
           '/xppage' : (context) => XpScreen(),
-          '/noticepage' : (context) => BoardPage(),
+          '/boardpage' : (context) => BoardPage(),
         '/mypage': (context) => MyPage(),
         },
     );

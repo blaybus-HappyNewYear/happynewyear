@@ -36,7 +36,7 @@ class _BottomNavigationState extends State<BottomNavigation> {
         Navigator.pushReplacementNamed(context, '/xppage');
         break;
       case 3:
-        Navigator.pushReplacementNamed(context, '/noticepage');
+        Navigator.pushReplacementNamed(context, '/boardpage');
         break;
       case 4:
         Navigator.pushReplacementNamed(context, '/mypage');
@@ -63,6 +63,7 @@ class _BottomNavigationState extends State<BottomNavigation> {
       currentIndex: _selectedIndex,
       onTap: _onItemTapped,
       type: BottomNavigationBarType.fixed,
+      backgroundColor: Colors.white,
     );
   }
 }

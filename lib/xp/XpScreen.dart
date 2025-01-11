@@ -31,11 +31,39 @@ class XpScreen extends StatelessWidget {
           ),
         ),
       ),
-      body: Center(
-        child: Text(
-          "Xp Screen",
-          style: TextStyle(fontSize: 24),
-        ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 390,
+            height: 307,
+            decoration: BoxDecoration(
+              color: Colors.white, // 배경 흰색
+              border: Border.all(color: Colors.grey.shade300), // 선택적 테두리
+
+            ),
+            child: Center(
+              child: Text(
+                "경험치 현황",
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black87,
+                ),
+              ),
+            ),
+          ),
+
+          Expanded(
+            child: Container(
+              alignment: Alignment.topCenter,
+              child: Text(
+                "추가 콘텐츠 영역",
+                style: TextStyle(fontSize: 24),
+              ),
+            ),
+          ),
+        ],
       ),
       bottomNavigationBar: BottomNavigation(selectedIndex: 2),
     );
