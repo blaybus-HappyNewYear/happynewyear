@@ -58,10 +58,13 @@ class MainScreen extends StatelessWidget {
           backgroundColor: Colors.white,
         ),
       ),
-      body: Center(
-        child: Text(
-          "Main Screen",
-          style: TextStyle(fontSize: 24),
+      body: Container(
+        color: Colors.white,
+        child: Center(
+          child: Text(
+            "Main Screen",
+            style: TextStyle(fontSize: 24),
+          ),
         ),
       ),
     bottomNavigationBar:

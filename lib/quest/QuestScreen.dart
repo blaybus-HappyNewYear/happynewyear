@@ -31,10 +31,13 @@ class QuestScreen extends StatelessWidget {
           ),
         ),
       ),
-      body: Center(
-        child: Text(
-          "Quest Screen",
-          style: TextStyle(fontSize: 24),
+      body: Container(
+        color: Colors.white,
+        child: Center(
+          child: Text(
+            "Quest Screen",
+            style: TextStyle(fontSize: 24),
+          ),
         ),
       ),
       bottomNavigationBar:
