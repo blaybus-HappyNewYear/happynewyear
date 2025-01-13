@@ -259,7 +259,7 @@ Widget _buildProgressRow(String label, double progress, String value) {
                   children: [
                     // 이미지
                     Image.asset(
-                      'assets/images/group.png', // 이미지 경로
+                      'assets/icons/group.png', // 이미지 경로
                       width: 50, // 이미지 너비
                       height: 50, // 이미지 높이
                     ),

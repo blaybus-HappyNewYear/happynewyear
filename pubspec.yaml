@@ -97,6 +97,8 @@ flutter:
      - assets/images/woman-04.png
      - assets/images/woman-04.svg
      - assets/icons/Pencil.png
+     - assets/icons/quest_list.png
+     - assets/icons/group.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
