@@ -5,6 +5,7 @@ import 'mypage/MyPage.dart';
 import 'board/BoardScreen.dart';
 import 'MainScreen.dart';
 import 'xp/XpScreen.dart';
+import 'xp/TotalxpPage.dart';
 import 'mypage/PasswordChangePage.dart';
 
 void main() {
@@ -26,6 +27,7 @@ class MyApp extends StatelessWidget {
           '/boardpage' : (context) => BoardPage(),
         '/mypage': (context) => MyPage(),
           '/passwordchangepage': (context) => PasswordChangePage(),
+          '/totalxppage' : (context) => Totalxppage(),
         },
     );
   }

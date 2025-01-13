@@ -8,9 +8,11 @@ class MainScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xFFFFF9F9),
+
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(60),
         child: AppBar(
+          scrolledUnderElevation: 0,
           title: Container(
             alignment: Alignment.centerLeft,
             padding: EdgeInsets.only(top: 10.0),
@@ -205,64 +207,69 @@ class DynamicTextContainer extends StatelessWidget {
 
         return Transform.translate(
           offset: (index % 2 == 0) ? Offset(10, 0) : Offset(-10, 0),
-          child: Container(
-            width: 338,
-            height: 68,
-            margin: EdgeInsets.symmetric(vertical: 4.0),
-            padding: EdgeInsets.symmetric(horizontal: 20.0),
-            decoration: BoxDecoration(
-              color: containerColor,
-              borderRadius: BorderRadius.circular(8),
-              border: containerBorder,
-            ),
-            child: Stack(
-              children: [
-                // 왼쪽 상단 텍스트들 (퀘스트 이름 + 값 데이터 + "do" 단위)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Align(
-                      alignment: Alignment.center,
-                      child: Text(
-                        questName,
-                        style: questNameStyle,
+          child: GestureDetector(
+            onTap: () {
+          Navigator.pushReplacementNamed(context, '/totalxppage');
+        },
+            child: Container(
+              width: 338,
+              height: 68,
+              margin: EdgeInsets.symmetric(vertical: 4.0),
+              padding: EdgeInsets.symmetric(horizontal: 20.0),
+              decoration: BoxDecoration(
+                color: containerColor,
+                borderRadius: BorderRadius.circular(8),
+                border: containerBorder,
+              ),
+              child: Stack(
+                children: [
+                  // 왼쪽 상단 텍스트들 (퀘스트 이름 + 값 데이터 + "do" 단위)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Align(
+                        alignment: Alignment.center,
+                        child: Text(
+                          questName,
+                          style: questNameStyle,
+                        ),
                       ),
-                    ),
-                    SizedBox(width: 8),
-                    Align(
-                      alignment: Alignment.center,
-                      child: Text(
-                        '+',
-                        style: questValueStyle.copyWith(fontSize: questValueStyle.fontSize! - 2),
+                      SizedBox(width: 8),
+                      Align(
+                        alignment: Alignment.center,
+                        child: Text(
+                          '+',
+                          style: questValueStyle.copyWith(fontSize: questValueStyle.fontSize! - 2),
+                        ),
                       ),
-                    ),
-                    Align(
-                      alignment: Alignment.center,
-                      child: Text(
-                        questValue,
-                        style: questValueStyle,
+                      Align(
+                        alignment: Alignment.center,
+                        child: Text(
+                          questValue,
+                          style: questValueStyle,
+                        ),
                       ),
-                    ),
-                    SizedBox(width: 4),
-                    Align(
-                      alignment: Alignment.center,
-                      child: Text(
-                        'do',
-                        style: questValueStyle.copyWith(fontSize: questValueStyle.fontSize! - 2),
+                      SizedBox(width: 4),
+                      Align(
+                        alignment: Alignment.center,
+                        child: Text(
+                          'do',
+                          style: questValueStyle.copyWith(fontSize: questValueStyle.fontSize! - 2),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                // 오른쪽 하단 텍스트 (날짜 데이터)
-                Positioned(
-                  bottom: 8,
-                  right: 0,
-                  child: Text(
-                    questDate,
-                    style: questDateStyle,
+                    ],
                   ),
-                ),
-              ],
+                  // 오른쪽 하단 텍스트 (날짜 데이터)
+                  Positioned(
+                    bottom: 8,
+                    right: 0,
+                    child: Text(
+                      questDate,
+                      style: questDateStyle,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         );
