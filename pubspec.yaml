@@ -33,6 +33,8 @@ dependencies:
   http: ^1.1.0
   shared_preferences: ^2.2.3
   speech_balloon: ^0.0.4
+  fl_chart: 0.70.1
+  intl: ^0.18.0
 
 
   # The following adds the Cupertino Icons font to your application.

@@ -12,14 +12,15 @@ class _NoticePageState extends State<NoticePage> {
   @override
   void initState() {
     super.initState();
-    fetchNotifications();
+    fetchNotifications(); // 데이터를 초기화할 때 로드
   }
 
+  // Mock 데이터를 반환하는 메서드
   Future<void> fetchNotifications() async {
-    await Future.delayed(Duration(seconds: 1)); // 로딩 효과를 위한 딜레이
+    await Future.delayed(Duration(seconds: 1)); // 로딩 효과를 위한 딜레이 (옵션)
     setState(() {
       notifications = fetchMockNotifications();
-      isLoading = false;
+      isLoading = false; // 로딩 상태 변경
     });
   }
 
@@ -53,6 +54,35 @@ class _NoticePageState extends State<NoticePage> {
         'timestamp': '12월 31일',
         'isRead': false,
       },
+      {
+        'id': 5,
+        'type': '게시판',
+        'content': "AAA 프로젝트 신설 라는 새로운 게시글이 등록되었어요.",
+        'timestamp': '12월 31일',
+        'isRead': false,
+      },
+      {
+        'id': 6,
+        'type': '게시판',
+        'content': "AAA 프로젝트 신설 라는 새로운 게시글이 등록되었어요.",
+        'timestamp': '12월 31일',
+        'isRead': true,
+      },
+      {
+        'id': 7,
+        'type': '게시판',
+        'content': "AAA 프로젝트 신설 라는 새로운 게시글이 등록되었어요.",
+        'timestamp': '12월 31일',
+        'isRead': true,
+      },
+      {
+        'id': 8,
+        'type': '게시판',
+        'content': "AAA 프로젝트 신설 라는 새로운 게시글이 등록되었어요.",
+        'timestamp': '12월 31일',
+        'isRead': false,
+      },
+
     ];
   }
 
@@ -74,33 +104,26 @@ class _NoticePageState extends State<NoticePage> {
         bottom: PreferredSize(
           preferredSize: Size.fromHeight(2.0),
           child: Container(
-            color: Colors.grey.shade300, // 구분선 색상
+            color: Color(0xFFEAEAEA),
             height: 1.0,
           ),
         ),
       ),
       body: Container(
-        color: Colors.white, // 배경색 흰색
+        color: Colors.white, // 배경색을 흰색으로 설정
         child: isLoading
             ? Center(
           child: CircularProgressIndicator(),
         )
             : notifications.isEmpty
             ? Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.notifications_off,
-                size: 60,
-                color: Colors.grey.shade400,
-              ),
-              SizedBox(height: 16),
-              Text(
-                '알림이 없습니다.',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
-              ),
-            ],
+          child: Text(
+            '알림이 없습니다.',
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey,
+              fontFamily: 'Pretendard',
+            ),
           ),
         )
             : ListView.builder(
@@ -108,7 +131,6 @@ class _NoticePageState extends State<NoticePage> {
           itemBuilder: (context, index) {
             final notification = notifications[index];
             final isRead = notification['isRead'] ?? false; // 읽음 여부 확인
-
             return GestureDetector(
               onTap: () {
                 setState(() {
@@ -117,7 +139,8 @@ class _NoticePageState extends State<NoticePage> {
               },
               child: Container(
                 decoration: BoxDecoration(
-                  color: isRead ? Colors.white : Color(0xFFFBECE6), // 읽지 않은 알림 배경
+                  color: isRead ? Colors.white : Color(0xFFFBECE6),
+                  // 읽지 않은 알림은 주황색
                   border: Border(
                     bottom: BorderSide(
                       color: Colors.grey.shade300,
@@ -154,7 +177,7 @@ class _NoticePageState extends State<NoticePage> {
                       notification['content'],
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.black,
+                        color: Colors.grey.shade700,
                       ),
                     ),
                   ],
@@ -163,6 +186,7 @@ class _NoticePageState extends State<NoticePage> {
             );
           },
         ),
+
       ),
     );
   }
