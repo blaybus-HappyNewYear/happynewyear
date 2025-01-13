@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '/MainScreen.dart';
 import '/api/auth_login.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -14,6 +13,23 @@ class _LoginState extends State<Login> {
   final TextEditingController _passwordController = TextEditingController();
   final authLogin = AuthLogin();
 
+  // token 확인용 코드
+  void _login() async {
+    String username = _idController.text;
+    String password = _passwordController.text;
+
+    // signIn 메소드 호출
+    final result = await authLogin.signIn(username, password);
+
+    // 응답 처리
+    if (result != null) {
+      print('Grant Type: ${result['grantType']}');
+      print('Access Token: ${result['accessToken']}');
+      print('Refresh Token: ${result['refreshToken']}');
+    } else {
+      print('Login failed');
+    }
+  }
   String? idErrorMessage;
   String? passwordErrorMessage;
   bool isIdError = false;
@@ -134,12 +150,21 @@ class _LoginState extends State<Login> {
     }
 
     // Proceed with login if ID is valid
-    final accessToken = await authLogin.signIn(username, password);
+// Proceed with login if ID is valid
+    final tokens = await authLogin.signIn(username, password);
 
-    if (accessToken != null) {
-      print('Login successful! Token: $accessToken');
+    if (tokens != null) {
+      print('Login successful! Token: ${tokens['accessToken']}');
+
+      // Save accessToken to SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('accessToken', tokens['accessToken'] ?? '');
+
+      // 👉 로그인 성공 시 무조건 사용자 정보 저장
+      _saveUserData();
+
       _navigateToMainScreen();
-    } else {
+    }else {
       setState(() {
         passwordErrorMessage = '비밀번호가 일치하지 않습니다';
         isPasswordError = true;
@@ -147,15 +172,6 @@ class _LoginState extends State<Login> {
       print('Login failed');
     }
 
-    //로그인 성공 시 "로그인 유지" 상태에 따라 저장
-    if (isRememberMe) {
-      _saveUserData(); // 로그인 유지 상태를 저장
-    } else {
-      final prefs = await SharedPreferences.getInstance();
-      prefs.remove('isRememberMe');
-      prefs.remove('username');
-      prefs.remove('password');
-    }
   }
 
   @override
@@ -465,7 +481,7 @@ class _LoginState extends State<Login> {
                                           child: Text(
                                             "확인",
                                             style: TextStyle(
-                                              fontFamily: 'Pretendard',
+                                                fontFamily: 'Pretendard',
                                                 fontSize: 16.0,
                                                 color: Colors.white,
                                                 fontWeight: FontWeight.w700

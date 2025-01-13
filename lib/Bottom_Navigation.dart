@@ -22,7 +22,6 @@ class _BottomNavigationState extends State<BottomNavigation> {
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
-      print(index);
     });
 
     switch (index) {
@@ -36,7 +35,7 @@ class _BottomNavigationState extends State<BottomNavigation> {
         Navigator.pushReplacementNamed(context, '/xppage');
         break;
       case 3:
-        Navigator.pushReplacementNamed(context, '/noticepage');
+        Navigator.pushReplacementNamed(context, '/boardpage');
         break;
       case 4:
         Navigator.pushReplacementNamed(context, '/mypage');
@@ -47,6 +46,7 @@ class _BottomNavigationState extends State<BottomNavigation> {
   @override
   Widget build(BuildContext context) {
     return BottomNavigationBar(
+      backgroundColor: Colors.white,
       items: <BottomNavigationBarItem>[
     BottomNavigationBarItem(icon: Image.asset("assets/icons/home_unselect.png"),
     activeIcon: Image.asset("assets/icons/home_select.png"), label: ''),
