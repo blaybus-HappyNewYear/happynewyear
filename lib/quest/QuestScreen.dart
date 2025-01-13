@@ -11,9 +11,9 @@ class QuestScreen extends StatefulWidget {
 }
 
 
-//week 캘린더 조회(디폴트페이지)
+//week 캘린더 조회
 Future<Map<String, dynamic>> fetchWeekCalendar(String accessToken) async {
-  final url = Uri.parse('http://52.78.9.87:8080/calendar/week');
+  final url = Uri.parse('http://52.78.9.87:8080/calendar/weekly');
   final response = await http.get(url, headers: {
     'Authorization': 'Bearer $accessToken',
   });
@@ -25,9 +25,9 @@ Future<Map<String, dynamic>> fetchWeekCalendar(String accessToken) async {
   }
 }
 
-//week 캘린더 조회(다음페이지)
+//month 캘린더 조회
 Future<Map<String, dynamic>> fetchWeekNextCalendar(String accessToken) async {
-  final url = Uri.parse('http://52.78.9.87:8080/calendar/week/{year}/next');
+  final url = Uri.parse('http://52.78.9.87:8080/calendar/monthly');
   final response = await http.get(url, headers: {
     'Authorization': 'Bearer $accessToken',
   });
@@ -39,80 +39,10 @@ Future<Map<String, dynamic>> fetchWeekNextCalendar(String accessToken) async {
   }
 }
 
-//week 캘린더 조회(이전페이지)
-Future<List<dynamic>> fetchPreviousCalender(String accessToken, int id) async {
-  final url = Uri.parse('http://52.78.9.87:8080/calendar/week/{year}/previous');
-  final response = await http.get(url, headers: {
-    'Authorization': 'Bearer $accessToken',
-  });
-
-  if (response.statusCode == 200) {
-    return json.decode(response.body);
-  } else {
-    throw Exception('Failed to load quest list');
-  }
-}
-
-//month 캘린더조회(디폴트페이지)
-Future<List<dynamic>> fetchMonthCalender(String accessToken, int id) async {
-  final url = Uri.parse('http://52.78.9.87:8080/calendar/month');
-  final response = await http.get(url, headers: {
-    'Authorization': 'Bearer $accessToken',
-  });
-
-  if (response.statusCode == 200) {
-    return json.decode(response.body);
-  } else {
-    throw Exception('Failed to load quest list');
-  }
-}
-
-//month 캘린더조회(다음페이지)
-Future<List<dynamic>> fetchMonthCalenderNext(String accessToken, int id) async {
-  final url = Uri.parse('http://52.78.9.87:8080/calendar/month/{year}/next');
-  final response = await http.get(url, headers: {
-    'Authorization': 'Bearer $accessToken',
-  });
-
-  if (response.statusCode == 200) {
-    return json.decode(response.body);
-  } else {
-    throw Exception('Failed to load quest list');
-  }
-}
-
-//month 캘린더 조회(이전페이지)
-Future<List<dynamic>> fetchMonthCalenderPrevious(String accessToken, int id) async {
-  final url = Uri.parse('http://52.78.9.87:8080/calendar/month/{year}/previous');
-  final response = await http.get(url, headers: {
-    'Authorization': 'Bearer $accessToken',
-  });
-
-  if (response.statusCode == 200) {
-    return json.decode(response.body);
-  } else {
-    throw Exception('Failed to load quest list');
-  }
-}
-
-//주/월별 퀘스트 리스트
-Future<List<dynamic>> fetchQuestList(String accessToken, int id) async {
-  final url = Uri.parse('http://52.78.9.87:8080/calendar/$id');
-  final response = await http.get(url, headers: {
-    'Authorization': 'Bearer $accessToken',
-  });
-
-  if (response.statusCode == 200) {
-    return json.decode(response.body);
-  } else {
-    throw Exception('Failed to load quest list');
-  }
-}
-
 
 //리더부여퀘스트 목록
-Future<List<dynamic>> fetchLeaderQuestList(String accessToken, int id) async {
-  final url = Uri.parse('http://52.78.9.87:8080/calendar/quest_list');
+Future<List<dynamic>> fetchQuestList(String accessToken, int id) async {
+  final url = Uri.parse('http://52.78.9.87:8080/calendar/quest-list');
   final response = await http.get(url, headers: {
     'Authorization': 'Bearer $accessToken',
   });
@@ -125,7 +55,7 @@ Future<List<dynamic>> fetchLeaderQuestList(String accessToken, int id) async {
 }
 
 //내 소속
-Future<List<dynamic>> fetchTeam(String accessToken, int id) async {
+Future<List<dynamic>> fetchLeaderQuestList(String accessToken, int id) async {
   final url = Uri.parse('http://52.78.9.87:8080/calendar/team');
   final response = await http.get(url, headers: {
     'Authorization': 'Bearer $accessToken',
@@ -138,6 +68,28 @@ Future<List<dynamic>> fetchTeam(String accessToken, int id) async {
   }
 }
 
+void fetchAllData() async {
+  String accessToken = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJqYW1pbmhlbyIsImF1dGgiOiJST0xFX1VTRVIiLCJleHAiOjE3MzY4Nzc1MDF9.oIrL9FsosKC-Znh3hB8IfQrXNHrCXnutS4FFtJ5BVm4';
+  try {
+    // 주간 캘린더 데이터
+    Map<String, dynamic> weeklyCalendar = await fetchWeekCalendar(accessToken);
+    print("Weekly Calendar Data: $weeklyCalendar");
+
+    // 월간 캘린더 데이터
+    Map<String, dynamic> monthlyCalendar = await fetchWeekNextCalendar(accessToken);
+    print("Monthly Calendar Data: $monthlyCalendar");
+
+    // 퀘스트 목록
+    List<dynamic> questList = await fetchQuestList(accessToken, 1); // ID는 예시로 1 사용
+    print("Quest List Data: $questList");
+
+    // 리더 부여 소속 데이터
+    List<dynamic> leaderQuestList = await fetchLeaderQuestList(accessToken, 1); // ID는 예시로 1 사용
+    print("Leader Quest List Data: $leaderQuestList");
+  } catch (e) {
+    print("Error fetching data: $e");
+  }
+}
 
 
 // 첫번째 일요일 날짜 계산
