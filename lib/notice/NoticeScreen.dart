@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class NoticePage extends StatefulWidget {
   @override
@@ -6,7 +8,7 @@ class NoticePage extends StatefulWidget {
 }
 
 class _NoticePageState extends State<NoticePage> {
-  List<Map<String, dynamic>> notifications = [];
+  List<dynamic> notifications = [];
   bool isLoading = true;
 
   @override
@@ -15,14 +17,43 @@ class _NoticePageState extends State<NoticePage> {
     fetchNotifications(); // 데이터를 초기화할 때 로드
   }
 
-  // Mock 데이터를 반환하는 메서드
   Future<void> fetchNotifications() async {
-    await Future.delayed(Duration(seconds: 1)); // 로딩 효과를 위한 딜레이 (옵션)
-    setState(() {
-      notifications = fetchMockNotifications();
-      isLoading = false; // 로딩 상태 변경
-    });
+    final url = Uri.parse('http://52.78.9.87:8080/notification');
+    final token = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJtaW5zdWtpbSIsImF1dGgiOiJST0xFX1VTRVIiLCJleHAiOjE3MzY5NDg0Njd9.g1V8THPXqDOMdEGeZg3-maqNU4CMpEc7J3fumyMRiK4';
+
+    try {
+      final response = await http.get(
+        url,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+
+        // 데이터가 비어 있는 경우 처리
+        if (data == null || (data is List && data.isEmpty)) {
+          print("No notifications available.");
+          setState(() {
+            notifications = []; // 빈 배열로 초기화
+          });
+          return;
+        }
+
+        setState(() {
+          notifications = data; // 데이터가 있을 경우만 업데이트
+        });
+        print("Notification Data fetched successfully: $notifications");
+      } else {
+        print('Failed to load notification data: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching notification data: $e');
+    }
   }
+
 
   List<Map<String, dynamic>> fetchMockNotifications() {
     return [

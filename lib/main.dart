@@ -7,8 +7,15 @@ import 'MainScreen.dart';
 import 'xp/XpScreen.dart';
 import 'xp/TotalxpPage.dart';
 import 'mypage/PasswordChangePage.dart';
+// import 'package:firebase_core/firebase_core.dart';
+import 'services/PushNotificationService.dart';
 
-void main() {
+void main() async{
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // // 알림 서비스 초기화
+  // await Firebase.initializeApp();
+  // PushNotificationService.initialize();
   runApp(MyApp());
 }
 
@@ -24,8 +31,17 @@ class MyApp extends StatelessWidget {
           '/mainpage' : (context) => MainScreen(),
           '/questpage' : (context) => QuestScreen(),
           '/xppage' : (context) => XpScreen(),
-          '/boardpage' : (context) => BoardPage(),
-        '/mypage': (context) => MyPage(),
+          '/boardpage': (context) {
+            final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+            if (args == null || args['isAdmin'] == null) {
+              return Scaffold(
+                body: Center(child: Text('잘못된 접근입니다.')),
+              );
+            }
+            return BoardPage(isAdmin: args['isAdmin']);
+          },
+
+          '/mypage': (context) => MyPage(),
           '/passwordchangepage': (context) => PasswordChangePage(),
           '/totalxppage' : (context) => Totalxppage(),
         },
