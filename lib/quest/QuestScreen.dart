@@ -14,6 +14,7 @@ class _QuestScreenState extends State<QuestScreen> {
   List<dynamic> monthlyCalendarData = [];
   List<dynamic> selectedQuests = [];
   List<dynamic> leaderQuestData = [];
+  bool isLoading = true;
 
   int selectedYear = DateTime.now().year;
   int selectedMonth = DateTime.now().month;
@@ -30,8 +31,21 @@ class _QuestScreenState extends State<QuestScreen> {
     fetchTeamName();
     fetchWeeklyCalendarData();
     fetchMonthlyCalendarData();
+    loadTeamData();
   }
 
+  Future<void> loadTeamData() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    await Future.delayed(Duration(seconds: 1));
+
+    setState(() {
+      isLoading = false;
+      // 로드한 데이터를 변수에 할당
+    });
+  }
 
   Future<void> fetchTeamName() async {
     final url = Uri.parse('http://52.78.9.87:8080/calendar/team');
@@ -564,7 +578,8 @@ class _QuestScreenState extends State<QuestScreen> {
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
         backgroundColor: Colors.white,
-        elevation: 1,
+        scrolledUnderElevation: 0,
+
         title: Text(
           "우리 팀 퀘스트",
           style: TextStyle(
@@ -581,8 +596,17 @@ class _QuestScreenState extends State<QuestScreen> {
         //     onPressed: loadDummyData, // 더미 데이터를 로드하는 버튼
         //   ),
         // ],
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(2.0),
+          child: Container(
+            color: Color(0xFFEAEAEA),
+            height: 1.0,
+          ),
+        ),
       ),
-      body: SingleChildScrollView(
+      body: isLoading
+          ? Center(child: CircularProgressIndicator())  // 로딩 중일 때 표시
+          : SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
           child: Column(
@@ -729,7 +753,6 @@ class _QuestScreenState extends State<QuestScreen> {
                       );
                     },
                   ),
-
                 ],
               ),
               SizedBox(height: 12),
