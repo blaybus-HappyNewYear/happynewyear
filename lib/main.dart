@@ -7,6 +7,7 @@ import 'MainScreen.dart';
 import 'xp/XpScreen.dart';
 import 'xp/TotalxpPage.dart';
 import 'mypage/PasswordChangePage.dart';
+import 'notice/NoticeScreen.dart';
 // import 'package:firebase_core/firebase_core.dart';
 import 'services/PushNotificationService.dart';
 
@@ -40,7 +41,7 @@ class MyApp extends StatelessWidget {
             }
             return BoardPage(isAdmin: args['isAdmin']);
           },
-
+          '/noticepage' : (context) => NoticePage(),
           '/mypage': (context) => MyPage(),
           '/passwordchangepage': (context) => PasswordChangePage(),
           '/totalxppage' : (context) => Totalxppage(),

@@ -120,16 +120,39 @@ class _NoticePageState extends State<NoticePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
+      appBar:  AppBar(
         backgroundColor: Colors.white,
-        centerTitle: true,
-        title: Text(
-          "알림",
-          style: TextStyle(
-            fontFamily: 'Pretendard',
-            fontSize: 18.0,
-            fontWeight: FontWeight.w600,
-            color: Colors.black,
+        title: Container(
+          alignment: Alignment.center,
+          padding: EdgeInsets.only(top: 10.0),
+          color: Colors.white,
+          child: Stack(
+            children: [
+              Align(
+                alignment: Alignment.centerLeft,
+                child: IconButton(
+                  icon: Icon(Icons.arrow_back_ios_new, color: Colors.black, size: 16),
+                  onPressed: () {
+                    Navigator.pushReplacementNamed(context, '/mainpage');
+                  },
+                ),
+              ),
+              Container(
+                alignment: Alignment.center,
+                padding: EdgeInsets.only(top: 10),
+                child: Center(
+                  child: Text(
+                    "알림",
+                    style: TextStyle(
+                      fontFamily: 'Pretendard',
+                      fontSize: 18.0,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
         bottom: PreferredSize(

@@ -157,12 +157,7 @@ class _MainScreenState extends State<MainScreen> {
             padding: EdgeInsets.only(top: 10.0, right: 10.0),
             icon: Image.asset("assets/icons/alarm_default.png"),
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => NoticePage(),
-                ),
-              );
+              Navigator.pushReplacementNamed(context, '/noticepage');
             },
           ),
         ],
