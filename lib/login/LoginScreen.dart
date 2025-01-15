@@ -13,23 +13,6 @@ class _LoginState extends State<Login> {
   final TextEditingController _passwordController = TextEditingController();
   final authLogin = AuthLogin();
 
-  // token 확인용 코드
-  void _login() async {
-    String username = _idController.text;
-    String password = _passwordController.text;
-
-    // signIn 메소드 호출
-    final result = await authLogin.signIn(username, password);
-
-    // 응답 처리
-    if (result != null) {
-      print('Grant Type: ${result['grantType']}');
-      print('Access Token: ${result['accessToken']}');
-      print('Refresh Token: ${result['refreshToken']}');
-    } else {
-      print('Login failed');
-    }
-  }
   String? idErrorMessage;
   String? passwordErrorMessage;
   bool isIdError = false;
@@ -110,7 +93,13 @@ class _LoginState extends State<Login> {
     ); // MainScreen으로 이동
   }
 
+  bool isLoading = false; // 로딩 상태 변수 추가
+
   void _handleSignIn() async {
+    setState(() {
+      isLoading = true; // 로딩 시작
+    });
+
     final username = _idController.text;
     final password = _passwordController.text;
 
@@ -146,11 +135,13 @@ class _LoginState extends State<Login> {
 
     // 두 필드 중 하나라도 오류가 있을 경우, 로그인 진행하지 않음
     if (hasError) {
+      setState(() {
+        isLoading = false; // 로딩 종료
+      });
       return;
     }
 
     // Proceed with login if ID is valid
-// Proceed with login if ID is valid
     final tokens = await authLogin.signIn(username, password);
 
     if (tokens != null) {
@@ -164,7 +155,7 @@ class _LoginState extends State<Login> {
       _saveUserData();
 
       _navigateToMainScreen();
-    }else {
+    } else {
       setState(() {
         passwordErrorMessage = '비밀번호가 일치하지 않습니다';
         isPasswordError = true;
@@ -172,7 +163,11 @@ class _LoginState extends State<Login> {
       print('Login failed');
     }
 
+    setState(() {
+      isLoading = false; // 로딩 종료
+    });
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -401,13 +396,17 @@ class _LoginState extends State<Login> {
                         ),
                       ),
                       onPressed: isButtonActive ? _handleSignIn : null,
-                      child: Text(
+                      child: isLoading
+                          ? CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      )
+                          : Text(
                         "로그인",
                         style: TextStyle(
                           fontFamily: 'Pretendard',
                           fontWeight: FontWeight.w700,
                           fontSize: 20.0,
-                          color: isButtonActive? Colors.white : Color(0xFFC7C7C7),
+                          color: isButtonActive ? Colors.white : Color(0xFFC7C7C7),
                         ),
                       ),
                     ),

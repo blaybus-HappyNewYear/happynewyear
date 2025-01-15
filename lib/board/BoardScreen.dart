@@ -382,6 +382,7 @@ class _DetailPageState extends State<DetailPage> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
+        scrolledUnderElevation: 0,
         centerTitle: true,
         leading: IconButton(
           padding: EdgeInsets.only(top: 5.0),

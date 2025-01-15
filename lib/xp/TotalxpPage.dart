@@ -1,17 +1,7 @@
 import 'package:flutter/material.dart';
-
-// 위젯에 표시할 데이터 모델
-class ExperienceData {
-  final String xpAmount;
-  final String date;
-  final String xpContent; // 경험치 내용 필드 추가
-
-  ExperienceData({
-    required this.xpAmount,
-    required this.date,
-    required this.xpContent,
-  });
-}
+import '/api/auth_xplogdata.dart'; // XplogItem과 AuthXplogdata를 import
+import '/api/auth_currentxp.dart';
+import 'package:intl/intl.dart';
 
 class Totalxppage extends StatefulWidget {
   @override
@@ -19,16 +9,31 @@ class Totalxppage extends StatefulWidget {
 }
 
 class _TotalxppageState extends State<Totalxppage> {
-  // 예시 데이터
-  List<ExperienceData> experienceDataList = [
-    ExperienceData(xpAmount: '150', date: '24/01/05', xpContent: '퀘스트 완료'),
-    ExperienceData(xpAmount: '200', date: '24/01/05', xpContent: '일일 미션'),
-    ExperienceData(xpAmount: '100', date: '24/01/05', xpContent: '보너스 경험치'),
-    ExperienceData(xpAmount: '100', date: '24/01/05', xpContent: '업적 달성'),
-    ExperienceData(xpAmount: '100', date: '24/01/05', xpContent: '업적 달성'),
-    ExperienceData(xpAmount: '100', date: '24/01/05', xpContent: '업적 달성'),
-    ExperienceData(xpAmount: '100', date: '24/01/05', xpContent: '업적 달성'),
-  ];
+  int? currentExp; // currentExp 값을 저장할 변수
+  List<XplogItem> experienceDataList = []; // XplogItem 데이터를 저장할 리스트
+
+  Future<void> fetchCurrentExp() async {
+    AuthCurrentxp authCurrentxp = AuthCurrentxp();
+    int? fetchedExp = await authCurrentxp.fetchCurrentxpData();
+    setState(() {
+      currentExp = fetchedExp;
+    });
+  }
+
+  Future<void> fetchExperienceData() async {
+    AuthXplogdata authXplogdata = AuthXplogdata();
+    List<XplogItem> fetchedData = await authXplogdata.FetchXplogData();
+    setState(() {
+      experienceDataList = fetchedData;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    fetchCurrentExp();
+    fetchExperienceData();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +55,7 @@ class _TotalxppageState extends State<Totalxppage> {
                   child: IconButton(
                     icon: Icon(Icons.arrow_back_ios_new, color: Colors.black, size: 16),
                     onPressed: () {
-                      Navigator.pushReplacementNamed(context, '/mainpage');
+                      Navigator.pop(context);
                     },
                   ),
                 ),
@@ -79,6 +84,7 @@ class _TotalxppageState extends State<Totalxppage> {
               height: 1.0,
             ),
           ),
+          automaticallyImplyLeading: false,
         ),
       ),
       body: Column(
@@ -114,7 +120,9 @@ class _TotalxppageState extends State<Totalxppage> {
                       child: Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          '경험치 수',
+                          currentExp != null
+                              ? NumberFormat('#,###').format(currentExp)
+                              : '로딩 중...',
                           style: TextStyle(
                             fontFamily: 'Pretendard',
                             fontSize: 28,
@@ -151,14 +159,16 @@ class _TotalxppageState extends State<Totalxppage> {
             color: Color(0xFFEAEAEA),
           ),
           Expanded(
-            child: ListView.builder(
+            child: experienceDataList.isEmpty
+                ? Center(child: CircularProgressIndicator()) // 로딩 중 표시
+                : ListView.builder(
               itemCount: experienceDataList.length,
               itemBuilder: (context, index) {
-                // 각 항목을 ExperienceItem 위젯으로 표시
                 return ExperienceItem(experienceData: experienceDataList[index]);
               },
             ),
           ),
+          SizedBox(height: 20),
         ],
       ),
     );
@@ -166,7 +176,7 @@ class _TotalxppageState extends State<Totalxppage> {
 }
 
 class ExperienceItem extends StatelessWidget {
-  final ExperienceData experienceData;
+  final XplogItem experienceData;
 
   ExperienceItem({required this.experienceData});
 
@@ -184,47 +194,64 @@ class ExperienceItem extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 왼쪽 부분: 경험치 내용과 날짜
+          // 왼쪽: 경험치와 설명
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 경험치 내용
                 Text(
-                  '+${experienceData.xpAmount}',
+                  experienceData.type,
                   style: TextStyle(
                     fontFamily: 'Pretendard',
-                    fontSize: 24,
+                    fontSize: 20,
                     fontWeight: FontWeight.w700,
                     color: Colors.black,
                   ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
                 ),
                 SizedBox(height: 4),
-                // 첫 번째 날짜 (왼쪽 상단)
                 Text(
-                  experienceData.xpContent,
+                  experienceData.comments,
                   style: TextStyle(
                     fontFamily: 'Pretendard',
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                     color: Color(0xFF8A8A8A),
                   ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 2,
                 ),
               ],
             ),
           ),
-          // 오른쪽 하단: 경험치 획득 내용
-          Align(
-            alignment: Alignment.bottomRight,
-            child: Text(
-              experienceData.date,
-              style: TextStyle(
-                fontFamily: 'Pretendard',
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: Color(0xFF8A8A8A),
+          Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top : 4, right: 10),
+                child: Text(
+                  '+${experienceData.exp} do',
+                  style: TextStyle(
+                    fontFamily: 'Pretendard',
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black,
+                  ),
+                ),
               ),
-            ),
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Text(
+                  DateFormat('yy/MM/dd').format(experienceData.earnedDate),
+                  style: TextStyle(
+                    fontFamily: 'Pretendard',
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF8A8A8A),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

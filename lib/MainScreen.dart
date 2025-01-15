@@ -2,171 +2,216 @@ import 'package:flutter/material.dart';
 import '/Bottom_Navigation.dart';
 import 'notice/NoticeScreen.dart';
 import 'package:speech_balloon/speech_balloon.dart';
+import '/api/auth_mypage.dart';
+import '/mypage/ProfilePic.dart';
+import '/api/auth_xprecentdata.dart';
+import '/api/auth_currentxp.dart';
+import 'package:intl/intl.dart';
 
-class MainScreen extends StatelessWidget {
+class MainScreen extends StatefulWidget {
+  @override
+  _MainScreenState createState() => _MainScreenState();
+}
+
+class _MainScreenState extends State<MainScreen> {
+  UserInfo? userInfo;
+  bool _isLoading = true; // Loading state
+  List<Map<String, String>> xpData = [];
+  int? currentExp;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+    _loadXpData();
+    _loadCurrentExp();
+  }
+
+  Future<void> _loadXpData() async {
+    AuthRecentXpdata authXpdata = AuthRecentXpdata();
+    List<Map<String, String>> fetchedData = await authXpdata.fetchxpData();
+    setState(() {
+      xpData = fetchedData;
+      _isLoading = false;  // 데이터 로드 완료 후 로딩 종료
+    });
+  }
+
+  Future<void> _loadCurrentExp() async {
+    AuthCurrentxp authCurrentxp = AuthCurrentxp();
+    int? fetchedExp = await authCurrentxp.fetchCurrentxpData();
+    setState(() {
+      currentExp = fetchedExp;
+      _isLoading = false;  // 데이터 로드 완료 후 로딩 종료
+    });
+  }
+
+  Future<void> _loadUserData() async {
+    UserInfo? fetchedData = await fetchUserData();
+    if (fetchedData != null) {
+      setState(() {
+        userInfo = fetchedData;
+        _isLoading = false; // Data loaded, set loading to false
+        print(userInfo!.imgNumber);
+      });
+    } else {
+      setState(() {
+        userInfo = null;
+        _isLoading = false; // Data loading failed, set loading to false
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xFFFFF9F9),
-
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(60),
-        child: AppBar(
-          scrolledUnderElevation: 0,
-          title: Container(
-            alignment: Alignment.centerLeft,
-            padding: EdgeInsets.only(top: 10.0),
-            child: Text.rich(
-              TextSpan(
-                text: '두손꼭',
+      appBar: _buildAppBar(context),
+      body: Container(
+        padding: EdgeInsets.all(0),
+        color: Color(0xFFFFF9F9),
+        child: Column(
+          children: [
+            // 경험치 관련 텍스트
+            Padding(
+              padding: const EdgeInsets.only(top: 20.0, left: 135.0, right: 135.0),
+              child: Text(
+                "올해 획득한 경험치",
                 style: TextStyle(
-                  fontFamily: 'RixInooAriDuri',
-                  fontSize: 22,
-                  color: Colors.black,
-                ),
-                children: <TextSpan>[
-                  TextSpan(
-                    text: 'Do',
-                    style: TextStyle(
-                      color: Color(0xFFF95E39),
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  TextSpan(
-                    text: '전!',
-                    style: TextStyle(
-                      fontFamily: 'RixInooAriDuri',
-                      fontSize: 22,
-                      color: Colors.black,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          actions: [
-            IconButton(
-              padding: EdgeInsets.only(top: 10.0),
-              icon: Image.asset("assets/icons/alarm_default.png"),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => NoticePage(),
-                  ),
-                );
-              },
-            ),
-          ],
-          bottom: PreferredSize(
-            preferredSize: Size.fromHeight(2.0), // 보더의 높이를 설정
-            child: Container(
-              color: Color(0xFFEAEAEA), // 보더 색상
-              height: 1.0, // 보더 두께
-            ),
-          ),
-          backgroundColor: Colors.white,
-        ),
-      ),
-      body: SingleChildScrollView(
-        child: Container(
-          padding: EdgeInsets.all(0), // padding을 없애면 컨테이너가 전체 화면을 채움
-          color: Color(0xFFFFF9F9),
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 38.0, left: 135.0, right: 135.0),
-                child: Text(
-                  "올해 획득한 경험치",
-                  style: TextStyle(
-                    fontFamily: 'Pretendard',
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF565656),
-                  ),
+                  fontFamily: 'Pretendard',
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF565656),
                 ),
               ),
-              SizedBox(height: 8), // 텍스트와 말풍선 사이 간격
-              SpeechBalloon(
-                nipLocation: NipLocation.bottom,  // 말풍선의 꼬리 위치
-                borderColor: Color(0xFFFA603B),         // 테두리 색상
-                height: 60,                        // 말풍선 높이
-                width: 204,                        // 말풍선 너비
-                borderRadius: 8,                  // 말풍선 둥근 모서리
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text('경험치 수',
-                    style: TextStyle(
-                      fontFamily: 'Pretendard',
-                      fontWeight: FontWeight.w700,
-                      fontSize: 28,
-                      color: Color(0xFFF95E39)
-                    ),),
-                    SizedBox(width: 8),
-                    Text(
-                      'do',
-                      style: TextStyle(
-                          fontFamily: 'Pretendard',
-                          fontWeight: FontWeight.w700,
-                          fontSize: 28,
-                          color: Colors.black),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 8,),
-              Container(width: 120,
+            ),
+            SizedBox(height: 8),
+            _buildSpeechBalloon(),
+            _isLoading
+                ? SizedBox(
+              width: 120,
               height: 120,
-                child: Image.asset('assets/images/woman-01.png'),
+              child: Center(
+                child: CircularProgressIndicator(
+                  color: Color(0xFF0C8CE9),
+                ),
               ),
-              SizedBox(height: 16,),
-              DynamicTextContainer(
-                dataList: [{
-                  'questName': '직무퀘스트',
-                  'questValue': '100',
-                  'questDate': '24/01/05',
-                },
-                {
-                  'questName': '직무퀘스트',
-                  'questValue': '500',
-                  'questDate': '24/01/05',
-                },
-                {
-                  'questName': '직무퀘스트',
-                  'questValue': '500',
-                  'questDate': '24/01/05',
-                },
-                {
-                  'questName': '직무퀘스트',
-                  'questValue': '500',
-                  'questDate': '24/01/05',
-                },
-                  {
-                    'questName': '직무퀘스트',
-                    'questValue': '500',
-                    'questDate': '24/01/05',
-                  },
-                ],
+            )
+                : Container(
+              width: 120,
+              height: 120,
+              child: userInfo != null
+                  ? Image.asset(profileImages[int.parse(userInfo!.imgNumber)])
+                  : Container(
+                color: Colors.grey, // 이미지가 없을 경우 기본 색상
               ),
-            ],
-          ),
+            ),
+            Expanded(
+              child: DynamicTextContainer(dataList: xpData,
+              ),
+            )
+          ],
         ),
       ),
-      bottomNavigationBar:
-      // Theme(
-      //     data: ThemeData(
-      //     splashColor: Colors.transparent,
-      //     // highlightColor: Colors.transparent,
-      //   ),
-      //   child: BottomNavigationBar(
-      //     items: items, // 위에서 정의한 items 리스트를 전달
-      //     currentIndex: _selectedIndex, // 선택된 인덱스 표시
-      //     onTap: _onItemTapped, // 탭 시 호출될 함수
-      //     type: BottomNavigationBarType.fixed,
-      //   ),
-      // ),
-      BottomNavigation(selectedIndex: 0),
+      bottomNavigationBar: BottomNavigation(selectedIndex: 0),
+    );
+  }
+
+  PreferredSize _buildAppBar(BuildContext context) {
+    return PreferredSize(
+      preferredSize: Size.fromHeight(60),
+      child: AppBar(
+        scrolledUnderElevation: 0,
+        title: Container(
+          alignment: Alignment.centerLeft,
+          padding: EdgeInsets.only(top: 10.0),
+          child: Text.rich(
+            TextSpan(
+              text: '두손꼭',
+              style: TextStyle(
+                fontFamily: 'RixInooAriDuri',
+                fontSize: 22,
+                color: Colors.black,
+              ),
+              children: <TextSpan>[
+                TextSpan(
+                  text: 'Do',
+                  style: TextStyle(
+                    color: Color(0xFFF95E39),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                TextSpan(
+                  text: '전!',
+                  style: TextStyle(
+                    fontFamily: 'RixInooAriDuri',
+                    fontSize: 22,
+                    color: Colors.black,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          IconButton(
+            padding: EdgeInsets.only(top: 10.0, right: 10.0),
+            icon: Image.asset("assets/icons/alarm_default.png"),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => NoticePage(),
+                ),
+              );
+            },
+          ),
+        ],
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(1.0),
+          child: Container(
+            color: Color(0xFFEAEAEA),
+            height: 1.0,
+          ),
+        ),
+        backgroundColor: Colors.white,
+        automaticallyImplyLeading: false, // 뒤로가기 화살표 제거
+      ),
+    );
+  }
+
+  Widget _buildSpeechBalloon() {
+    return SpeechBalloon(
+      nipLocation: NipLocation.bottom,
+      borderColor: Color(0xFFFA603B),
+      height: 60,
+      width: 204,
+      borderRadius: 8,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            currentExp != null
+                ? NumberFormat('#,###').format(currentExp)
+                : '로딩 중...',
+            style: TextStyle(
+              fontFamily: 'Pretendard',
+              fontWeight: FontWeight.w700,
+              fontSize: 28,
+              color: Colors.black,
+            ),
+          ),
+          SizedBox(width: 8),
+          Text(
+            'do',
+            style: TextStyle(
+              fontFamily: 'Pretendard',
+              fontWeight: FontWeight.w700,
+              fontSize: 28,
+              color: Colors.black,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -178,8 +223,11 @@ class DynamicTextContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
+    List<Map<String, String>> limitedDataList = dataList.take(5).toList();  // 5개 항목만 선택
+
     return Column(
-      children: dataList.asMap().entries.map((entry) {
+      children: limitedDataList.asMap().entries.map((entry) {
         int index = entry.key;
         var data = entry.value;
 
@@ -209,7 +257,8 @@ class DynamicTextContainer extends StatelessWidget {
           offset: (index % 2 == 0) ? Offset(10, 0) : Offset(-10, 0),
           child: GestureDetector(
             onTap: () {
-          Navigator.pushReplacementNamed(context, '/totalxppage');
+              AuthRecentXpdata().fetchxpData();  // AuthXpdata의 fetchxpData 메서드 호출
+          Navigator.pushNamed(context, '/totalxppage');
         },
             child: Container(
               width: 338,
@@ -227,29 +276,30 @@ class DynamicTextContainer extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
-                      Align(
-                        alignment: Alignment.center,
-                        child: Text(
-                          questName,
-                          style: questNameStyle,
+                      // questName 텍스트가 너무 길 경우 "..."으로 표시
+                      Flexible(
+                        flex: 2,
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            questName,
+                            style: questNameStyle,
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
                         ),
                       ),
                       SizedBox(width: 8),
                       Align(
                         alignment: Alignment.center,
                         child: Text(
-                          '+',
-                          style: questValueStyle.copyWith(fontSize: questValueStyle.fontSize! - 2),
-                        ),
-                      ),
-                      Align(
-                        alignment: Alignment.center,
-                        child: Text(
-                          questValue,
+                          '+ ${NumberFormat('#,###').format(int.tryParse(questValue))}',
                           style: questValueStyle,
                         ),
                       ),
                       SizedBox(width: 4),
+
+                      // "do" 단위 텍스트
                       Align(
                         alignment: Alignment.center,
                         child: Text(
@@ -261,7 +311,7 @@ class DynamicTextContainer extends StatelessWidget {
                   ),
                   // 오른쪽 하단 텍스트 (날짜 데이터)
                   Positioned(
-                    bottom: 8,
+                    bottom: 2,
                     right: 0,
                     child: Text(
                       questDate,

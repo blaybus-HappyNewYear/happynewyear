@@ -143,7 +143,7 @@ class _PasswordChangePageState extends State<PasswordChangePage> {
         });
 
         // 비밀번호 변경 완료 후 홈 화면으로 이동
-        Navigator.pushReplacementNamed(context, '/');
+        _showSuccessDialog();
       } else {
         // 서버에서 실패 메시지 출력
         setState(() {
@@ -156,6 +156,86 @@ class _PasswordChangePageState extends State<PasswordChangePage> {
       });
     }
   }
+
+  void _showSuccessDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10.0),
+          ),
+          backgroundColor: Colors.white,
+          child: Container(
+            height: 234.0,
+            width: 350.0,
+            padding: EdgeInsets.symmetric(horizontal: 16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                SizedBox(height: 28),
+                Text(
+                  "비밀번호 변경 완료",
+                  style: TextStyle(
+                    fontFamily: 'Pretendard',
+                    fontSize: 24.0,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black,
+                  ),
+                ),
+                SizedBox(height: 16),
+                RichText(
+                  textAlign: TextAlign.center,
+                  text: TextSpan(
+                    style: TextStyle(
+                      fontFamily: 'Pretendard',
+                      fontSize: 14.0,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF565656),
+                      height: 1.8,
+                    ),
+                    children: [
+                      TextSpan(text: "비밀번호가 변경되었습니다.\n"),
+                      TextSpan(text: "새로운 비밀번호로 로그인 해주시기 바랍니다."),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 22),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: Size(280.0, 52.0),
+                        backgroundColor: Color(0xFFF95E39),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(5.0),
+                        ),
+                      ),
+                      onPressed: () {
+                        // 홈 화면으로 이동
+                        Navigator.pushReplacementNamed(context, '/');
+                      },
+                      child: Text(
+                        "확인",
+                        style: TextStyle(
+                          fontFamily: 'Pretendard',
+                          fontSize: 16.0,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
 
   @override
   void initState() {
