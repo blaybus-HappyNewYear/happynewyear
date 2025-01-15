@@ -35,13 +35,7 @@ class _BottomNavigationState extends State<BottomNavigation> {
         Navigator.pushReplacementNamed(context, '/xppage');
         break;
       case 3:
-        Navigator.pushReplacementNamed(
-          context,
-          '/boardpage',
-          arguments: {'isAdmin': true},
-        );
-        break;
-
+        Navigator.pushReplacementNamed(context, '/boardpage');
         break;
       case 4:
         Navigator.pushReplacementNamed(context, '/mypage');

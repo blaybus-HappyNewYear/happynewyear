@@ -1,127 +1,92 @@
 import 'package:flutter/material.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-
+import '/api/auth_boardlist.dart';
 import '../Bottom_Navigation.dart';
-import '../services/PushNotificationService.dart';
+import '/board/BoardDetail.dart';
 
 class BoardPage extends StatefulWidget {
-  final bool isAdmin; // 관리자 여부를 전달받음
-
-  BoardPage({required this.isAdmin});
-
   @override
   _BoardPageState createState() => _BoardPageState();
 }
 
 class _BoardPageState extends State<BoardPage> {
-  List<dynamic> posts = []; // 게시글 리스트
-  final TextEditingController titleController = TextEditingController();
-  final TextEditingController contentController = TextEditingController();
+  List<Post> posts = []; // 게시글 리스트
+  List<Post> filteredPosts = []; // 검색된 게시글 리스트
   bool isLoading = true; // 로딩 상태를 관리하는 변수
+  late AuthBoardlist authBoardlist;
+  TextEditingController searchController = TextEditingController(); // 검색어 입력을 위한 컨트롤러
+  bool isSearchEnabled = false; // 검색바 활성화 여부
 
   @override
   void initState() {
     super.initState();
-    fetchPostList(); // 초기화 시 게시글 목록 조회
+    authBoardlist = AuthBoardlist(); // AuthBoardlist 객체 초기화
+
+    // 데이터 로딩
+    _loadPosts();
   }
 
-  // 게시글 목록 조회 API
-  Future<void> fetchPostList({int page = 1}) async {
-    final String url = "http://52.78.9.87:8080/board?page=$page";
-    final Map<String, String> headers = {
-      "Content-Type": "application/json",
-    };
-
+  // 데이터를 로드하는 함수
+  Future<void> _loadPosts() async {
     try {
-      final response = await http.get(
-        Uri.parse(url),
-        headers: headers,
-      );
+      // getBoardListContent() 메서드를 호출하여 데이터 가져오기
+      final response = await authBoardlist.getBoardListContent();
 
-      if (response.statusCode == 200) {
-        final responseData = jsonDecode(response.body);
+      if (response != null && response.posts.isNotEmpty) {
         setState(() {
-          posts = responseData['posts']; // 게시글 리스트 저장
-          isLoading = false;
+          posts = response.posts; // 받아온 게시글로 posts 업데이트
+          filteredPosts = posts; // 검색된 게시글도 처음에는 전체 게시글로 설정
+          isLoading = false; // 로딩이 끝났으므로 false로 설정
         });
       } else {
-        print("게시글 목록 조회 실패: ${response.statusCode}");
-        print("응답 본문: ${response.body}");
         setState(() {
-          isLoading = false; // 에러가 발생해도 로딩을 끝내야 하므로
+          isLoading = false; // 로딩 종료
+          filteredPosts = []; // 게시글이 없으면 빈 리스트
         });
+        print("게시글 데이터가 없습니다.");
       }
-    } catch (e) {
-      print("오류 발생: $e");
+    } catch (error) {
       setState(() {
-        isLoading = false; // 오류가 발생하면 로딩을 끝내야 하므로
+        isLoading = false; // 로딩 종료
+      });
+      print("게시글을 불러오는 중 오류가 발생했습니다: $error");
+    }
+  }
+
+  // 검색어에 맞는 게시글을 필터링하는 함수
+  void _filterPosts(String query) {
+    if (query.isEmpty) {
+      setState(() {
+        filteredPosts = posts; // 검색어가 비었으면 전체 게시글을 다시 표시
+      });
+    } else {
+      final filtered = posts.where((post) {
+        final titleLower = post.title.toLowerCase();
+        final queryLower = query.toLowerCase();
+        return titleLower.contains(queryLower); // 제목에 검색어가 포함되면 true
+      }).toList();
+
+      setState(() {
+        filteredPosts = filtered; // 필터링된 게시글로 업데이트
       });
     }
   }
 
-  // 게시글 상세 조회 API
-  Future<void> fetchPostDetail(int id) async {
-    final String url = "http://52.78.9.87:8080/board/$id";
-    final Map<String, String> headers = {
-      "Content-Type": "application/json",
-    };
-
-    try {
-      final response = await http.post(
-        Uri.parse(url),
-        headers: headers,
-      );
-
-      if (response.statusCode == 200) {
-        final responseData = jsonDecode(response.body);
-        print("게시글 상세: $responseData");
-        // 상세 데이터를 다이얼로그 등으로 표시
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text(responseData['title']),
-            content: Text(responseData['content']),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text("닫기"),
-              ),
-            ],
-          ),
-        );
-      } else {
-        print("게시글 상세 조회 실패: ${response.statusCode}");
-        print("응답 본문: ${response.body}");
+  // 검색 아이콘 클릭시 활성화/비활성화 처리
+  void _toggleSearch() {
+    setState(() {
+      isSearchEnabled = !isSearchEnabled; // 검색 바의 활성화 여부를 토글
+      if (!isSearchEnabled) {
+        searchController.clear(); // 검색 취소시 텍스트 필드를 초기화
+        filteredPosts = posts; // 검색 취소시 전체 게시글을 다시 표시
       }
-    } catch (e) {
-      print("오류 발생: $e");
-    }
+    });
   }
 
-  // 게시글 등록 API
-  // Future<void> registerPost(String title, String content) async {
-  //   final String url = "http://52.78.9.87:8080/board/write";
-  //   try {
-  //     final response = await http.post(
-  //       Uri.parse(url),
-  //       headers: {"Content-Type": "application/json"},
-  //       body: jsonEncode({"title": title, "content": content}),
-  //     );
-  //     if (response.statusCode == 200) {
-  //       print("게시글 등록 성공");
-  //       fetchPostList(); // 목록 갱신
-  //       PushNotificationService.sendNotification(
-  //         title: "새로운 게시글",
-  //         body: "관리자가 새 게시글을 등록했습니다.",
-  //       ); // 푸시 알림 전송
-  //     } else {
-  //       print("게시글 등록 실패");
-  //     }
-  //   } catch (e) {
-  //     print("오류 발생: $e");
-  //   }
-  // }
+  @override
+  void dispose() {
+    searchController.dispose(); // 컨트롤러 메모리 해제
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -131,93 +96,93 @@ class _BoardPageState extends State<BoardPage> {
         backgroundColor: Colors.white,
         scrolledUnderElevation: 0,
         centerTitle: true,
-        title: Text(
-          "게시판",
-          style: TextStyle(
-            fontFamily: 'Pretendard',
-            fontSize: 18.0,
-            fontWeight: FontWeight.w600,
-            color: Colors.black,
-          ),
-        ),
-        bottom: PreferredSize(
-          preferredSize: Size.fromHeight(2.0),
-          child: Container(
-            color: Color(0xFFEAEAEA),
-            height: 1.0,
+        title: Container(
+          padding: EdgeInsets.only(top:10.0),
+          child: Text(
+            "게시판",
+            style: TextStyle(
+              fontFamily: 'Pretendard',
+              fontSize: 18.0,
+              fontWeight: FontWeight.w600,
+              color: Colors.black,
+            ),
           ),
         ),
         actions: [
-          if (widget.isAdmin) // 관리자일 경우에만 버튼 표시
-            IconButton(
-              icon: Icon(Icons.add),
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: Text("게시글 등록"),
-                    content: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        TextField(
-                          controller: titleController,
-                          decoration: InputDecoration(labelText: "제목"),
-                        ),
-                        TextField(
-                          controller: contentController,
-                          decoration: InputDecoration(labelText: "내용"),
-                          maxLines: 3,
-                        ),
-                      ],
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        child: Text("취소"),
-                      ),
-                      if (widget.isAdmin) // 관리자일 경우에만 등록 버튼 추가
-                        TextButton(
-                          onPressed: () {
-                            final title = titleController.text;
-                            final content = contentController.text;
-
-                            // if (title.isNotEmpty && content.isNotEmpty) {
-                            //   registerPost(title, content, "your_admin_token_here");
-                            //   titleController.clear();
-                            //   contentController.clear();
-                            //   Navigator.of(context).pop();
-                            // } else {
-                            //   print("제목과 내용을 입력하세요.");
-                            // }
-                          },
-                          child: Text("등록"),
-                        ),
-                    ],
-                  ),
-                );
-              },
+          IconButton(
+            icon: Icon(
+              isSearchEnabled ? Icons.close : Icons.search, // 검색 상태에 따라 아이콘 변경
+              color: Colors.black,
             ),
+            onPressed: _toggleSearch, // 아이콘 클릭시 토글
+          ),
         ],
+        bottom: isSearchEnabled
+            ? PreferredSize(
+          preferredSize: Size.fromHeight(56.0), // 검색바 높이 설정
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              controller: searchController,
+              onChanged: _filterPosts, // 검색어 변경시마다 필터링
+              decoration: InputDecoration(
+                hintText: '검색어를 입력하세요...',
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: Colors.grey, width: 1),
+                ),
+              ),
+            ),
+          ),
+        )
+            : PreferredSize(
+          preferredSize: Size.fromHeight(2.0), // 높이를 2.0으로 설정
+          child: Container(
+            color: Color(0xFFEAEAEA), // 구분선 색상 설정
+            height: 2.0, // 라인의 두께
+          ),
+        ),
+        automaticallyImplyLeading: false,
       ),
       body: isLoading
-          ? Center(child: CircularProgressIndicator()) // 로딩 중일 때 표시할 로딩 화면
+          ? Center(child: CircularProgressIndicator()) // 로딩 화면
           : Container(
         color: Colors.white,
-        child: ListView.builder(
-          itemCount: posts.length,
+        child: filteredPosts.isNotEmpty
+            ? ListView.builder(
+          itemCount: filteredPosts.length,
           itemBuilder: (context, index) {
-            final post = posts[index];
-            return ListTile(
-              title: Text(post['title']),
-              subtitle: Text("조회수: ${post['views']} / 작성일: ${post['createdAt']}"),
-              onTap: () {
-                fetchPostDetail(post['id']); // 상세 조회 호출
-              },
+            final post = filteredPosts[index];
+            return Column(
+              children: [
+                ListTile(
+                  title: Text(post.title),
+                  subtitle: Text(
+                      "조회수: ${post.views} / 작성일: ${post.createdAt}"),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => BoardDetail(post.id.toString()),
+                      ),
+                    ).then((_) {
+                      // 돌아왔을 때 게시글 목록을 새로 고침
+                      _loadPosts();  // 게시글 목록을 다시 로드하여 최신 정보를 반영
+                    });
+                  },
+                ),
+                Divider(
+                  color: Color(0xFFEAEAEA),
+                  thickness: 0.5,
+                ), // 각 항목 사이에 구분선 추가
+              ],
             );
           },
-        ),
+        )
+            : Center(child: Text("검색 결과가 없습니다.")), // 검색 결과가 없을 때
       ),
-      bottomNavigationBar: BottomNavigation(selectedIndex: 1),
+      bottomNavigationBar: BottomNavigation(selectedIndex: 3),
     );
   }
 }

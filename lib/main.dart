@@ -32,15 +32,7 @@ class MyApp extends StatelessWidget {
           '/mainpage' : (context) => MainScreen(),
           '/questpage' : (context) => QuestScreen(),
           '/xppage' : (context) => XpScreen(),
-          '/boardpage': (context) {
-            final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-            if (args == null || args['isAdmin'] == null) {
-              return Scaffold(
-                body: Center(child: Text('잘못된 접근입니다.')),
-              );
-            }
-            return BoardPage(isAdmin: args['isAdmin']);
-          },
+          '/boardpage': (context) => BoardPage(),
           '/noticepage' : (context) => NoticePage(),
           '/mypage': (context) => MyPage(),
           '/passwordchangepage': (context) => PasswordChangePage(),
