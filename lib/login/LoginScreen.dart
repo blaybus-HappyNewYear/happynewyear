@@ -3,6 +3,9 @@ import '/api/auth_login.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Login extends StatefulWidget {
+  final String fcmToken;
+  Login({required this.fcmToken});
+
   @override
   State<Login> createState() => _LoginState();
 }
@@ -17,6 +20,7 @@ class _LoginState extends State<Login> {
   String? passwordErrorMessage;
   bool isIdError = false;
   bool isPasswordError = false;
+  String? errorMessage;
 
   // Password visibility state
   bool isHiddenPassword = true;
@@ -85,6 +89,19 @@ class _LoginState extends State<Login> {
     prefs.setString('password', _passwordController.text);
   }
 
+  Future<void> _sendFcmToken(String accessToken) async {
+    try {
+      final response = await authLogin.sendFcmToken(widget.fcmToken, accessToken);
+      if (response) {
+        print("FCM 토큰 전송 성공");
+      } else {
+        print("FCM 토큰 전송 실패");
+      }
+    } catch (e) {
+      print("FCM 토큰 전송 중 오류 발생: $e");
+    }
+  }
+
   // Navigate to the main screen after login
   void _navigateToMainScreen() {
     Navigator.pushReplacementNamed(
@@ -95,77 +112,51 @@ class _LoginState extends State<Login> {
 
   bool isLoading = false; // 로딩 상태 변수 추가
 
-  void _handleSignIn() async {
+  Future<void> _handleLogin() async {
     setState(() {
-      isLoading = true; // 로딩 시작
+      isLoading = true;
+      errorMessage = null;
     });
 
-    final username = _idController.text;
-    final password = _passwordController.text;
+    final username = _idController.text.trim();
+    final password = _passwordController.text.trim();
 
-    bool hasError = false;
+    try {
+      final tokens = await authLogin.signIn(username, password);
 
-    // ID 검증
-    if (!_isValidId(username)) {
+      if (tokens != null) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('accessToken', tokens['accessToken'] ?? '');
+
+        // FCM 토큰 전송
+        final success = await authLogin.sendFcmToken(widget.fcmToken, tokens['accessToken'] ?? '');
+
+        if (!success) {
+          // FCM 토큰 전송 실패 시에도 메인 페이지로 이동할지 판단
+          print("FCM 토큰 전송 실패, 하지만 메인 페이지로 이동");
+        }
+
+        if (isRememberMe) {
+          await _saveUserData();
+        }
+
+        // MainPage로 이동
+        Navigator.pushReplacementNamed(context, '/mainpage');
+      } else {
+        setState(() {
+          errorMessage = "아이디 또는 비밀번호가 잘못되었습니다.";
+        });
+      }
+    } catch (e) {
       setState(() {
-        idErrorMessage = '아이디 형식이 올바르지 않습니다';
-        isIdError = true;
+        errorMessage = "로그인 중 오류가 발생했습니다. 다시 시도해주세요.";
       });
-      hasError = true;
-    } else {
+      print("Login error: $e");
+    } finally {
       setState(() {
-        idErrorMessage = null;
-        isIdError = false;
+        isLoading = false;
       });
     }
-
-    // 비밀번호 검증
-    if (password.isEmpty) {
-      setState(() {
-        passwordErrorMessage = '비밀번호를 입력하세요';
-        isPasswordError = true;
-      });
-      hasError = true;
-    } else if (passwordErrorMessage == null) {
-      setState(() {
-        passwordErrorMessage = null;
-        isPasswordError = false;
-      });
-    }
-
-    // 두 필드 중 하나라도 오류가 있을 경우, 로그인 진행하지 않음
-    if (hasError) {
-      setState(() {
-        isLoading = false; // 로딩 종료
-      });
-      return;
-    }
-
-    // Proceed with login if ID is valid
-    final tokens = await authLogin.signIn(username, password);
-
-    if (tokens != null) {
-      print('Login successful! Token: ${tokens['accessToken']}');
-
-      // Save accessToken to SharedPreferences
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('accessToken', tokens['accessToken'] ?? '');
-
-      // 👉 로그인 성공 시 무조건 사용자 정보 저장
-      _saveUserData();
-
-      _navigateToMainScreen();
-    } else {
-      setState(() {
-        passwordErrorMessage = '비밀번호가 일치하지 않습니다';
-        isPasswordError = true;
-      });
-      print('Login failed');
-    }
-
-    setState(() {
-      isLoading = false; // 로딩 종료
-    });
   }
 
 
@@ -395,7 +386,7 @@ class _LoginState extends State<Login> {
                           borderRadius: BorderRadius.circular(10.0),
                         ),
                       ),
-                      onPressed: isButtonActive ? _handleSignIn : null,
+                      onPressed: isButtonActive ? _handleLogin : null,
                       child: isLoading
                           ? CircularProgressIndicator(
                         valueColor: AlwaysStoppedAnimation<Color>(Colors.white),

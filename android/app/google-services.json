@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "159240372402",
-    "project_id": "blaybus-50236",
-    "storage_bucket": "blaybus-50236.firebasestorage.app"
+    "project_number": "35565552028",
+    "project_id": "happynewyear-bdfbd",
+    "storage_bucket": "happynewyear-bdfbd.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:159240372402:android:125c9112d2ec0e426349ab",
+        "mobilesdk_app_id": "1:35565552028:android:f362780412c6f67d8c0859",
         "android_client_info": {
           "package_name": "com.example.happynewyear"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyB8MWPqCa1JCE4IX4BUnCk0M7vBgKUqqOE"
+          "current_key": "AIzaSyB9ErSz_HzCmY-lvvIRarioU6OmuHb8BAg"
         }
       ],
       "services": {

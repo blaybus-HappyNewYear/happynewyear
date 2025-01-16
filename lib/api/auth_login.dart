@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class AuthLogin {
-  final String baseUrl = 'http://52.78.9.87:8080'; // 서버 주소
+  final String baseUrl = 'https://da5e-118-39-93-133.ngrok-free.app'; // 서버 주소
 
   // 로그인 메소드
   Future<Map<String, String>?> signIn(String username, String password) async {
@@ -38,6 +38,31 @@ class AuthLogin {
     } catch (e) {
       print('Exception: $e');
       return null;
+    }
+  }
+
+  Future<bool> sendFcmToken(String fcmToken, String accessToken) async {
+    final url = Uri.parse('$baseUrl/fcm-token');
+    try {
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $accessToken', // Bearer 토큰 인증
+        },
+        body: jsonEncode({'fcmToken': fcmToken}),
+      );
+
+      if (response.statusCode == 200) {
+        print('성공');
+        return true; // 성공
+      } else {
+        print("Failed to send FCM token: ${response.statusCode}");
+        return false; // 실패
+      }
+    } catch (e) {
+      print("Error sending FCM token: $e");
+      return false;
     }
   }
 }

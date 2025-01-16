@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'dart:convert';
 
 class NoticePage extends StatefulWidget {
@@ -11,190 +12,105 @@ class _NoticePageState extends State<NoticePage> {
   List<dynamic> notifications = [];
   bool isLoading = true;
 
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+  FlutterLocalNotificationsPlugin();
+
   @override
   void initState() {
     super.initState();
-    fetchNotifications(); // 데이터를 초기화할 때 로드
+    initializeFCM();
   }
 
-  Future<void> fetchNotifications() async {
-    final url = Uri.parse('http://52.78.9.87:8080/notification');
-    final token = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJtaW5zdWtpbSIsImF1dGgiOiJST0xFX1VTRVIiLCJleHAiOjE3MzY5NDg0Njd9.g1V8THPXqDOMdEGeZg3-maqNU4CMpEc7J3fumyMRiK4';
+  void initializeFCM() async {
+    // Firebase 메시지 초기화
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      RemoteNotification? notification = message.notification;
+      if (notification != null) {
+        // 알림 표시
+        showNotification(notification);
 
-    try {
-      final response = await http.get(
-        url,
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-
-        // 데이터가 비어 있는 경우 처리
-        if (data == null || (data is List && data.isEmpty)) {
-          print("No notifications available.");
-          setState(() {
-            notifications = []; // 빈 배열로 초기화
-          });
-          return;
-        }
-
+        // 알림 데이터를 리스트에 추가
         setState(() {
-          notifications = data; // 데이터가 있을 경우만 업데이트
+          notifications.insert(0, {
+            'type': message.data['type'] ?? '알림',
+            'content': notification.body ?? '',
+            'timestamp': DateTime.now().toLocal().toString().split(' ')[0],
+            'isRead': false,
+          });
         });
-        print("Notification Data fetched successfully: $notifications");
-      } else {
-        print('Failed to load notification data: ${response.statusCode}');
       }
-    } catch (e) {
-      print('Error fetching notification data: $e');
-    }
+    });
+
+    // 알림 채널 생성
+    const AndroidNotificationChannel channel = AndroidNotificationChannel(
+      'high_importance_channel',
+      'High Importance Notifications',
+      importance: Importance.max,
+    );
+
+    await flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(channel);
+
+    // 로컬 알림 초기화
+    const AndroidInitializationSettings initializationSettingsAndroid =
+    AndroidInitializationSettings('@mipmap/ic_launcher');
+    const InitializationSettings initializationSettings =
+    InitializationSettings(android: initializationSettingsAndroid);
+
+    await flutterLocalNotificationsPlugin.initialize(initializationSettings);
   }
 
+  void showNotification(RemoteNotification notification) async {
+    const AndroidNotificationDetails androidDetails =
+    AndroidNotificationDetails(
+      'high_importance_channel',
+      'High Importance Notifications',
+      importance: Importance.max,
+      priority: Priority.high,
+    );
 
-  List<Map<String, dynamic>> fetchMockNotifications() {
-    return [
-      {
-        'id': 1,
-        'type': '경험치',
-        'content': "\"직무퀘스트\"를 완료하여 500do 경험치를 획득하였습니다.",
-        'timestamp': '1월 9일',
-        'isRead': false,
-      },
-      {
-        'id': 2,
-        'type': '경험치',
-        'content': "인사평가 A등급입니다. 500do 경험치를 획득하였습니다.",
-        'timestamp': '1월 1일',
-        'isRead': true,
-      },
-      {
-        'id': 3,
-        'type': '경험치',
-        'content': "월 특근을 3회 완료하여 500do 경험치를 획득하였습니다.",
-        'timestamp': '12월 31일',
-        'isRead': false,
-      },
-      {
-        'id': 4,
-        'type': '게시판',
-        'content': "AAA 프로젝트 신설 라는 새로운 게시글이 등록되었어요.",
-        'timestamp': '12월 31일',
-        'isRead': false,
-      },
-      {
-        'id': 5,
-        'type': '게시판',
-        'content': "AAA 프로젝트 신설 라는 새로운 게시글이 등록되었어요.",
-        'timestamp': '12월 31일',
-        'isRead': false,
-      },
-      {
-        'id': 6,
-        'type': '게시판',
-        'content': "AAA 프로젝트 신설 라는 새로운 게시글이 등록되었어요.",
-        'timestamp': '12월 31일',
-        'isRead': true,
-      },
-      {
-        'id': 7,
-        'type': '게시판',
-        'content': "AAA 프로젝트 신설 라는 새로운 게시글이 등록되었어요.",
-        'timestamp': '12월 31일',
-        'isRead': true,
-      },
-      {
-        'id': 8,
-        'type': '게시판',
-        'content': "AAA 프로젝트 신설 라는 새로운 게시글이 등록되었어요.",
-        'timestamp': '12월 31일',
-        'isRead': false,
-      },
+    const NotificationDetails platformDetails =
+    NotificationDetails(android: androidDetails);
 
-    ];
+    await flutterLocalNotificationsPlugin.show(
+      notification.hashCode,
+      notification.title,
+      notification.body,
+      platformDetails,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar:  AppBar(
-        backgroundColor: Colors.white,
-        title: Container(
-          alignment: Alignment.center,
-          padding: EdgeInsets.only(top: 10.0),
-          color: Colors.white,
-          child: Stack(
-            children: [
-              Align(
-                alignment: Alignment.centerLeft,
-                child: IconButton(
-                  icon: Icon(Icons.arrow_back_ios_new, color: Colors.black, size: 16),
-                  onPressed: () {
-                    Navigator.pushReplacementNamed(context, '/mainpage');
-                  },
-                ),
-              ),
-              Container(
-                alignment: Alignment.center,
-                padding: EdgeInsets.only(top: 10),
-                child: Center(
-                  child: Text(
-                    "알림",
-                    style: TextStyle(
-                      fontFamily: 'Pretendard',
-                      fontSize: 18.0,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        bottom: PreferredSize(
-          preferredSize: Size.fromHeight(2.0),
-          child: Container(
-            color: Color(0xFFEAEAEA),
-            height: 1.0,
-          ),
-        ),
+      appBar: AppBar(
+        title: Text("알림"),
       ),
       body: Container(
-        color: Colors.white, // 배경색을 흰색으로 설정
-        child: isLoading
-            ? Center(
-          child: CircularProgressIndicator(),
-        )
-            : notifications.isEmpty
+        color: Colors.white,
+        child: notifications.isEmpty
             ? Center(
           child: Text(
             '알림이 없습니다.',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey,
-              fontFamily: 'Pretendard',
-            ),
+            style: TextStyle(fontSize: 16, color: Colors.grey),
           ),
         )
             : ListView.builder(
           itemCount: notifications.length,
           itemBuilder: (context, index) {
             final notification = notifications[index];
-            final isRead = notification['isRead'] ?? false; // 읽음 여부 확인
+            final isRead = notification['isRead'] ?? false;
             return GestureDetector(
               onTap: () {
                 setState(() {
-                  notification['isRead'] = true; // 클릭 시 읽음 처리
+                  notification['isRead'] = true;
                 });
               },
               child: Container(
                 decoration: BoxDecoration(
                   color: isRead ? Colors.white : Color(0xFFFBECE6),
-                  // 읽지 않은 알림은 주황색
                   border: Border(
                     bottom: BorderSide(
                       color: Colors.grey.shade300,
@@ -202,7 +118,8 @@ class _NoticePageState extends State<NoticePage> {
                     ),
                   ),
                 ),
-                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 25),
+                padding:
+                EdgeInsets.symmetric(horizontal: 20, vertical: 25),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -240,7 +157,6 @@ class _NoticePageState extends State<NoticePage> {
             );
           },
         ),
-
       ),
     );
   }

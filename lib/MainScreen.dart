@@ -7,6 +7,9 @@ import '/mypage/ProfilePic.dart';
 import '/api/auth_xprecentdata.dart';
 import '/api/auth_currentxp.dart';
 import 'package:intl/intl.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:http/http.dart' as http;
 
 class MainScreen extends StatefulWidget {
   @override
@@ -15,16 +18,95 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   UserInfo? userInfo;
-  bool _isLoading = true; // Loading state
+  bool _isLoading = true;
   List<Map<String, String>> xpData = [];
   int? currentExp;
+
+  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
+  final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
   @override
   void initState() {
     super.initState();
+    _initializeFirebaseMessaging();
     _loadUserData();
     _loadXpData();
     _loadCurrentExp();
+  }
+
+  void _initializeFirebaseMessaging() async {
+    // Initialize Firebase Messaging
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+    // Create a notification channel
+    const AndroidNotificationChannel channel = AndroidNotificationChannel(
+      'high_importance_channel',
+      'High Importance Notifications',
+      importance: Importance.max,
+    );
+
+    await _flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(channel);
+
+    // Set the foreground notification options
+    await _firebaseMessaging.setForegroundNotificationPresentationOptions(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+
+    // Get the device token
+    String? token = await _firebaseMessaging.getToken();
+    print("Firebase Token: $token");
+    if (token != null) {
+      _registerDeviceToken(token);
+    }
+
+    // Listen for foreground messages
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      RemoteNotification? notification = message.notification;
+      if (notification != null) {
+        _flutterLocalNotificationsPlugin.show(
+          notification.hashCode,
+          notification.title,
+          notification.body,
+          NotificationDetails(
+            android: AndroidNotificationDetails(
+              channel.id,
+              channel.name,
+              importance: Importance.max,
+              priority: Priority.high,
+            ),
+          ),
+        );
+      }
+    });
+  }
+
+  Future<void> _registerDeviceToken(String token) async {
+    final url = Uri.parse('https://232b-118-39-93-133.ngrok-free.app');
+    try {
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: '{"token": "$token"}',
+      );
+
+      if (response.statusCode == 200) {
+        print("Token successfully registered with backend");
+      } else {
+        print("Failed to register token: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Error sending token to backend: $e");
+    }
+  }
+
+  static Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+    print("Background message: ${message.notification?.body}");
   }
 
   Future<void> _loadXpData() async {
@@ -32,7 +114,7 @@ class _MainScreenState extends State<MainScreen> {
     List<Map<String, String>> fetchedData = await authXpdata.fetchxpData();
     setState(() {
       xpData = fetchedData;
-      _isLoading = false;  // 데이터 로드 완료 후 로딩 종료
+      _isLoading = false;
     });
   }
 
@@ -41,26 +123,17 @@ class _MainScreenState extends State<MainScreen> {
     int? fetchedExp = await authCurrentxp.fetchCurrentxpData();
     setState(() {
       currentExp = fetchedExp;
-      _isLoading = false;  // 데이터 로드 완료 후 로딩 종료
+      _isLoading = false;
     });
   }
 
   Future<void> _loadUserData() async {
     UserInfo? fetchedData = await fetchUserData();
-    if (fetchedData != null) {
-      setState(() {
-        userInfo = fetchedData;
-        _isLoading = false; // Data loaded, set loading to false
-        print(userInfo!.imgNumber);
-      });
-    } else {
-      setState(() {
-        userInfo = null;
-        _isLoading = false; // Data loading failed, set loading to false
-      });
-    }
+    setState(() {
+      userInfo = fetchedData;
+      _isLoading = false;
+    });
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
